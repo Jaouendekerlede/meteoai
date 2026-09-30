@@ -24,6 +24,7 @@
   --fond-haut-dyn: #1c2a52;
   --fond-bas-dyn: #141b36;
   --accent-meteo: #4fe0ff;
+  --surface-haute: rgba(11, 18, 36, 0.88);
 }
 
 body.clair {
@@ -36,6 +37,7 @@ body.clair {
   --ombre: 0 18px 34px -18px rgba(20, 30, 60, 0.25);
   --fond-haut-dyn: #dce8ff;
   --fond-bas-dyn: #f4f7fd;
+  --surface-haute: rgba(255, 255, 255, 0.82);
 }
 
 * { box-sizing: border-box; }
@@ -62,7 +64,7 @@ body.clair { background: radial-gradient(120% 90% at 15% -10%, var(--fond-haut-d
   position: sticky; top: 0; z-index: 40;
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 0 10px;
-  background: linear-gradient(var(--fond-haut) 55%, transparent);
+  background: linear-gradient(var(--surface-haute) 55%, transparent);
 }
 .ma-lieu { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; min-width: 0; flex: 1 1 auto; cursor: pointer; }
 .ma-lieu > span:last-child { min-width: 0; overflow: hidden; }
@@ -133,7 +135,7 @@ body.clair { background: radial-gradient(120% 90% at 15% -10%, var(--fond-haut-d
 .ma-tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
   display: flex; justify-content: space-around;
-  background: rgba(11, 18, 36, 0.88); backdrop-filter: blur(14px);
+  background: var(--surface-haute); backdrop-filter: blur(14px);
   border-top: 1px solid var(--bordure);
   padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
 }
