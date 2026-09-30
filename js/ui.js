@@ -12,6 +12,8 @@ import { categoriePrecip } from "./theme-meteo.js";
 import { releveVeille } from "./historique.js";
 import { creerLienSauvegarde } from "./restauration.js";
 import { initRadar, redimensionner, allerFrame, jouerPause, arreterLecture, infosFrame } from "./radar.js";
+import { valeursModeles, valeurAffichage, valeurAffichageTexte, valeurInterpolee, indexMaintenant } from "./donnees-modeles.js";
+import { calculerAlertes } from "./alertes-meteo.js";
 
 const $ = (id) => document.getElementById(id);
 const arrondi = (x) => (Number.isFinite(x) ? Math.round(x) : "—");
@@ -40,51 +42,7 @@ function heureHM(iso) {
   return new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
-// Index de l'heure la plus proche de maintenant dans la série horaire.
-function indexMaintenant(temps) {
-  const maintenant = Date.now();
-  let meilleur = 0;
-  let ecartMin = Infinity;
-  temps.forEach((t, i) => {
-    const e = Math.abs(new Date(t).getTime() - maintenant);
-    if (e < ecartMin) {
-      ecartMin = e;
-      meilleur = i;
-    }
-  });
-  return meilleur;
-}
-
-// Une valeur par modèle, dans l'ordre de MODELES (null si ce modèle n'a pas
-// de valeur à cet indice) -- l'ordre doit rester aligné avec MODELES pour
-// que la pondération (poidsModeles) reste correcte.
-function valeursModeles(parChamp, champ, i) {
-  return MODELES.map((m) => parChamp[champ]?.[m]?.[i]);
-}
-
 const NOMS_MODELES = Object.values(LABELS_MODELES);
-
-// Valeur "affichage" pour un champ : le modèle français (le plus précis sur
-// la France) en priorité, mais celui-ci ne couvre que ~4 jours -- au-delà,
-// on prend le premier autre modèle qui a une valeur à cet indice, plutôt que
-// d'afficher un blanc. Utilisé partout où une seule valeur (pas la
-// comparaison) doit être montrée.
-function valeurAffichage(parChamp, champ, i) {
-  for (const m of MODELES) {
-    const v = parChamp[champ]?.[m]?.[i];
-    if (Number.isFinite(v)) return v;
-  }
-  return null;
-}
-
-// Même repli, pour les champs texte (sunrise/sunset : horodatage ISO, pas un nombre).
-function valeurAffichageTexte(parChamp, champ, i) {
-  for (const m of MODELES) {
-    const v = parChamp[champ]?.[m]?.[i];
-    if (v) return v;
-  }
-  return null;
-}
 
 function confianceHeure(modeles, i) {
   const poids = poidsModeles(MODELES.length, 0); // toujours "maintenant" pour cet usage
@@ -214,6 +172,18 @@ function cablerTabbar() {
 }
 cablerTabbar();
 
+// Écouteur unique (posé une seule fois, pas à chaque rendu de Réglages) :
+// le bouton lui-même est recréé à chaque rendu, mais "window" ne l'est pas.
+window.addEventListener("ma-notifications-retour", (e) => {
+  const retour = $("ma-notif-retour");
+  const bouton = $("ma-notif-btn");
+  if (!retour || !bouton) return;
+  retour.style.display = "block";
+  retour.textContent =
+    e.detail === "granted" ? "✅ Alertes activées." : e.detail === "denied" ? "⚠️ Notifications refusées." : "Notifications non supportées par ce navigateur.";
+  bouton.textContent = texteBoutonNotif();
+});
+
 function afficherOnglet(nom) {
   const precedent = onglet;
   onglet = nom;
@@ -327,6 +297,11 @@ function uvTexte(uv) {
   return "Extrême";
 }
 
+function rendreAlertes(alertes) {
+  if (!alertes.length) return "";
+  return `<section class="ma-alertes">${alertes.map((a) => `<div class="ma-alerte ma-alerte-${a.niveau}"><span class="ic">${a.icone}</span><span>${a.texte}</span></div>`).join("")}</section>`;
+}
+
 // ── Onglet Accueil ───────────────────────────────────────────────────────
 
 function rendreAccueil(etat) {
@@ -337,7 +312,10 @@ function rendreAccueil(etat) {
   const j = modeles.journalier;
 
   const veille = releveVeille(etat.lieu);
+  const alertes = calculerAlertes({ actuel, modeles, iM, conf });
   const html = `
+    ${rendreAlertes(alertes)}
+
     <section class="ma-hero ${actuel.is_day === 0 ? "nuit" : ""}">
       ${overlayPrecip(categoriePrecip(actuel.weathercode))}
       <div class="ma-hero-top">
@@ -353,11 +331,11 @@ function rendreAccueil(etat) {
         <span class="min">▼ ${arrondi(valeurAffichage(j.parChamp, "temperature_2m_min", 0))}°</span>
       </div>
       <div class="ma-stats">
-        ${statHtml("droplet", "Pluie", `${arrondi(valeurAffichage(modeles.horaire.parChamp, "precipitation_probability", iM))}%`)}
+        ${statHtml("droplet", "Pluie", `${arrondi(valeurInterpolee(modeles.horaire, "precipitation_probability"))}%`)}
         ${statHtml("wind", "Vent", `${arrondi(actuel.wind_speed_10m)} km/h`, `Rafales ${arrondi(actuel.wind_gusts_10m)}`)}
         ${statHtml("droplet", "Humidité", `${arrondi(actuel.relative_humidity_2m)}%`)}
         ${statHtml("gauge", "Pression", `${arrondi(actuel.surface_pressure)}`, "hPa")}
-        ${statHtml("sun", "Indice UV", uvTexte(valeurAffichage(modeles.horaire.parChamp, "uv_index", iM)))}
+        ${statHtml("sun", "Indice UV", uvTexte(valeurInterpolee(modeles.horaire, "uv_index")))}
       </div>
     </section>
 
@@ -538,6 +516,13 @@ function joursRestants(dateStr) {
   return `J-${j}`;
 }
 
+function texteBoutonNotif() {
+  if (typeof Notification === "undefined") return "🔕 Notifications non supportées par ce navigateur";
+  if (Notification.permission === "granted") return "🔔 Alertes activées";
+  if (Notification.permission === "denied") return "🔕 Refusées -- à réactiver dans les réglages du navigateur";
+  return "🔔 Activer les alertes";
+}
+
 function rendreReglages(etat) {
   const favoris = listerFavoris();
   const voyages = listerVoyages();
@@ -546,6 +531,13 @@ function rendreReglages(etat) {
     <div class="ma-section-titre">Apparence</div>
     <div class="ma-carte">
       <button type="button" class="ma-position-inline" id="ma-theme-btn" style="margin-top:0">${theme === "clair" ? "☀️ Mode clair actif — passer en sombre" : "🌙 Mode sombre actif — passer en clair"}</button>
+    </div>
+
+    <div class="ma-section-titre">🔔 Alertes</div>
+    <div class="ma-carte">
+      <div class="ma-hint" style="margin-top:0;padding-bottom:10px">Pluie imminente, gel, verglas, vent fort, orage… Fonctionne tant que l'appli reste ouverte ou récemment en arrière-plan -- pas de vraie notification appli complètement fermée (il faudrait un serveur).</div>
+      <button type="button" class="ma-position-inline" id="ma-notif-btn" style="margin-top:0">${texteBoutonNotif()}</button>
+      <div class="ma-hint" id="ma-notif-retour" style="display:none"></div>
     </div>
 
     <div class="ma-section-titre">Favoris</div>
@@ -591,6 +583,11 @@ function rendreReglages(etat) {
 
 function cablerReglages() {
   $("ma-theme-btn")?.addEventListener("click", () => window.dispatchEvent(new CustomEvent("ma-basculer-theme")));
+
+  $("ma-notif-btn")?.addEventListener("click", () => {
+    if (typeof Notification === "undefined" || Notification.permission === "denied") return;
+    window.dispatchEvent(new CustomEvent("ma-activer-notifications"));
+  });
 
   $("ma-sauvegarde-btn")?.addEventListener("click", async () => {
     const retour = $("ma-sauvegarde-retour");

@@ -3,8 +3,8 @@
 // La météo elle-même (Open-Meteo) n'est jamais mise en cache ici : elle doit
 // toujours être fraîche.
 
-const CACHE_NOM = "meteoai-v6";
-const FICHIERS_COQUILLE = ["./", "./index.html", "./style.css", "./manifest.json", "./js/main.js", "./js/ui.js", "./js/meteo.js", "./js/confiance.js", "./js/geo.js", "./js/graphique.js", "./js/icones-meteo.js", "./js/storage.js", "./js/config.js", "./js/mentions.js", "./js/theme-meteo.js", "./js/historique.js", "./js/radar.js", "./js/restauration.js", "./icons/icon-192.png", "./icons/icon-512.png"];
+const CACHE_NOM = "meteoai-v7";
+const FICHIERS_COQUILLE = ["./", "./index.html", "./style.css", "./manifest.json", "./js/main.js", "./js/ui.js", "./js/meteo.js", "./js/confiance.js", "./js/geo.js", "./js/graphique.js", "./js/icones-meteo.js", "./js/storage.js", "./js/config.js", "./js/mentions.js", "./js/theme-meteo.js", "./js/historique.js", "./js/radar.js", "./js/restauration.js", "./js/donnees-modeles.js", "./js/alertes-meteo.js", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

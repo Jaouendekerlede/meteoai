@@ -2,8 +2,8 @@
 
 export const PROPRIETAIRE = "Jean-Luc RIO";
 export const ANNEE = 2026;
-export const VERSION = 6;
-export const VERSION_TEXTE = "Version 6 : en-tête et barre du bas suivent le mode clair";
+export const VERSION = 7;
+export const VERSION_TEXTE = "Version 7 : alertes météo, notifications, rafraîchissement auto, confiance affinée";
 
 export const MENTION_COURTE = `© ${ANNEE} ${PROPRIETAIRE} — Tous droits réservés`;
 

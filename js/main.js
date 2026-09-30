@@ -8,9 +8,40 @@ import { derniereVille, retenirVille, listerFavoris, basculerFavori, estFavori, 
 import { appliquerFondDynamique } from "./theme-meteo.js";
 import { noterReleveJournalier } from "./historique.js";
 import { restaurerDepuisAdresse } from "./restauration.js";
+import { indexMaintenant } from "./donnees-modeles.js";
+import { calculerAlertes } from "./alertes-meteo.js";
 
 const $ = (id) => document.getElementById(id);
 let lieuCourant = null;
+let derniereMeteo = null;
+let idsAlertesNotifiees = new Set();
+// 12 min : assez souvent pour être utile (pluie imminente...), assez rare
+// pour rester léger. Ne tourne que si l'appli est au premier plan -- voir
+// limite expliquée à l'utilisateur le 2026-09-30 (pas de vraie notification
+// appli fermée sans serveur).
+const DELAI_RAFRAICHISSEMENT_MS = 12 * 60 * 1000;
+
+function notifierNouvellesAlertes() {
+  if (!derniereMeteo || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  const iM = indexMaintenant(derniereMeteo.modeles.horaire.temps);
+  const alertes = calculerAlertes({ actuel: derniereMeteo.actuel, modeles: derniereMeteo.modeles, iM });
+  const idsActuels = new Set(alertes.map((a) => a.id));
+  for (const a of alertes) {
+    if (idsAlertesNotifiees.has(a.id)) continue;
+    try {
+      new Notification("Météo AI", { body: a.texte, icon: "icons/icon-192.png", tag: a.id });
+    } catch {
+      // Notification refusée/indisponible : tant pis, l'alerte reste visible dans l'appli.
+    }
+  }
+  idsAlertesNotifiees = idsActuels;
+}
+
+function demarrerRafraichissementAuto() {
+  setInterval(() => {
+    if (document.visibilityState === "visible" && lieuCourant) chargerEtAfficher(lieuCourant);
+  }, DELAI_RAFRAICHISSEMENT_MS);
+}
 
 function cacherSplash() {
   const el = $("ma-splash");
@@ -38,6 +69,8 @@ async function chargerEtAfficher(lieu) {
     afficherMeteo({ lieu, actuel, modeles });
     retenirVille(lieu);
     noterReleveJournalier(lieu, actuel);
+    derniereMeteo = { actuel, modeles };
+    notifierNouvellesAlertes();
   } catch (e) {
     afficherErreur(e.message || "Impossible de récupérer la météo pour le moment.", () => chargerEtAfficher(lieu));
   } finally {
@@ -164,6 +197,15 @@ function cablerUI() {
     sauverReglages({ theme: nouveau });
     appliquerTheme();
   });
+  window.addEventListener("ma-activer-notifications", async () => {
+    if (typeof Notification === "undefined") {
+      window.dispatchEvent(new CustomEvent("ma-notifications-retour", { detail: "indisponible" }));
+      return;
+    }
+    const resultat = await Notification.requestPermission();
+    window.dispatchEvent(new CustomEvent("ma-notifications-retour", { detail: resultat }));
+    if (resultat === "granted") notifierNouvellesAlertes();
+  });
 }
 
 async function demarrage() {
@@ -179,6 +221,7 @@ async function demarrage() {
     alert(`⚠️ Lien de sauvegarde invalide : ${e.message}`);
   }
   demarrer();
+  demarrerRafraichissementAuto();
 }
 
 demarrage();

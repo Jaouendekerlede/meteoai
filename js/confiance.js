@@ -122,6 +122,10 @@ export function calculerConfiance({ tempsC = [], precipPct = [], ventKmh = [], l
 // heures, où sa haute résolution locale est la plus fiable.
 export function poidsModeles(nbModeles, heuresDepuisMaintenant) {
   const poids = new Array(nbModeles).fill(1);
-  if (heuresDepuisMaintenant <= 48) poids[0] = 2;
+  // Poids 2 jusqu'à 24h, puis redescend en douceur jusqu'à 1 vers 72h --
+  // plus réaliste qu'un simple seuil brutal à 48h (la confiance qu'on peut
+  // avoir en AROME ne s'effondre pas d'un coup à l'heure 49).
+  if (heuresDepuisMaintenant <= 24) poids[0] = 2;
+  else if (heuresDepuisMaintenant < 72) poids[0] = 2 - (heuresDepuisMaintenant - 24) / 48;
   return poids;
 }
