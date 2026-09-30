@@ -25,4 +25,9 @@ export const STORAGE_KEYS = {
   favoris: "meteoai_favoris",
   derniereVille: "meteoai_derniere_ville",
   reglages: "meteoai_reglages",
+  historique: "meteoai_historique_releves",
+  voyages: "meteoai_voyages",
 };
+
+// API radar de précipitations (gratuite, sans clé) -- voir js/radar.js.
+export const API_RAINVIEWER = "https://api.rainviewer.com/public/weather-maps.json";

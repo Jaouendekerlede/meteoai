@@ -64,3 +64,91 @@ export function courbe({ valeurs, etiquettes, indexMaintenant = -1, unite = "", 
     ${etiquettesHtml}
   </svg>`;
 }
+
+// Température (courbe, zone haute) + précipitations (barres, zone basse) sur
+// le même axe des temps -- lecture d'un coup d'œil, comme les apps pro.
+export function courbeCombinee({ temperatures, precipitations, etiquettes, indexMaintenant = -1, largeur = 600, pasEtiquette = 3 }) {
+  const t = temperatures.map((x) => (Number.isFinite(x) ? x : null));
+  const finies = t.filter((x) => x !== null);
+  if (!finies.length) return "";
+  const min = Math.min(...finies);
+  const max = Math.max(...finies);
+  const ecart = max - min || 1;
+  const zoneL = largeur - MARGE.gauche - MARGE.droite;
+  const pasX = zoneL / Math.max(1, t.length - 1);
+  const hautTemp = { haut: 20, bas: 86 };
+  const zoneTempH = H - hautTemp.haut - hautTemp.bas;
+  const zonePluie = { haut: H - 70, bas: 28 };
+  const zonePluieH = H - zonePluie.haut - zonePluie.bas;
+  const maxPluie = Math.max(1, ...precipitations.filter(Number.isFinite));
+
+  const pts = t.map((val, i) => [MARGE.gauche + i * pasX, val === null ? null : hautTemp.haut + zoneTempH - ((val - min) / ecart) * zoneTempH]);
+  const ptsValides = pts.filter((p) => p[1] !== null);
+  const chemin = lisserChemin(ptsValides);
+
+  const largeurBarre = Math.max(2, pasX * 0.5);
+  const barres = precipitations
+    .map((p, i) => {
+      if (!Number.isFinite(p) || p <= 0) return "";
+      const h = (p / maxPluie) * zonePluieH;
+      const x = MARGE.gauche + i * pasX - largeurBarre / 2;
+      return `<rect x="${x}" y="${zonePluie.haut + zonePluieH - h}" width="${largeurBarre}" height="${h}" rx="1.5" fill="var(--accent)" opacity="0.55"/>`;
+    })
+    .join("");
+
+  const etiquettesHtml = etiquettes
+    .map((tt, i) => (i % pasEtiquette === 0 || i === t.length - 1 ? `<text x="${MARGE.gauche + i * pasX}" y="${H - 8}" font-size="10" fill="var(--texte-att)" text-anchor="middle">${tt}</text>` : ""))
+    .join("");
+
+  const maintenantHtml =
+    indexMaintenant >= 0 && pts[indexMaintenant]?.[1] !== null
+      ? `<line x1="${pts[indexMaintenant][0]}" y1="${hautTemp.haut}" x2="${pts[indexMaintenant][0]}" y2="${zonePluie.haut + zonePluieH}" stroke="var(--texte-att)" stroke-width="1" stroke-dasharray="3,3"/>
+         <circle cx="${pts[indexMaintenant][0]}" cy="${pts[indexMaintenant][1]}" r="4.5" fill="#ffc857" stroke="var(--fond-carte)" stroke-width="2"/>`
+      : "";
+
+  return `<svg viewBox="0 0 ${largeur} ${H}" width="100%" height="${H}" preserveAspectRatio="none" class="ma-graphique">
+    <text x="${MARGE.gauche}" y="${hautTemp.haut - 6}" font-size="11" fill="var(--texte)" font-weight="700">${Math.round(max)}°</text>
+    <text x="${MARGE.gauche}" y="${hautTemp.haut + zoneTempH + 2}" font-size="11" fill="var(--texte-att)" font-weight="700">${Math.round(min)}°</text>
+    ${barres}
+    <path d="${chemin}" fill="none" stroke="#ffc857" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${maintenantHtml}
+    ${etiquettesHtml}
+  </svg>`;
+}
+
+// Comparaison de plusieurs modèles superposés (même unité) -- pour voir
+// l'enveloppe d'incertitude d'un coup d'œil, sans devoir dérouler le détail.
+// series : [{ valeurs: number[], couleur: "#..." }].
+export function courbeMultiple({ series, etiquettes, indexMaintenant = -1, unite = "", largeur = 600, pasEtiquette = 3 }) {
+  const toutesValeurs = series.flatMap((s) => s.valeurs.filter(Number.isFinite));
+  if (!toutesValeurs.length) return "";
+  const min = Math.min(...toutesValeurs);
+  const max = Math.max(...toutesValeurs);
+  const ecart = max - min || 1;
+  const zoneH = H - MARGE.haut - MARGE.bas;
+  const zoneL = largeur - MARGE.gauche - MARGE.droite;
+  const n = etiquettes.length;
+  const pasX = zoneL / Math.max(1, n - 1);
+
+  const lignes = series
+    .map((s) => {
+      const pts = s.valeurs.map((val, i) => [MARGE.gauche + i * pasX, Number.isFinite(val) ? MARGE.haut + zoneH - ((val - min) / ecart) * zoneH : null]).filter((p) => p[1] !== null);
+      if (pts.length < 2) return "";
+      return `<path d="${lisserChemin(pts)}" fill="none" stroke="${s.couleur}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>`;
+    })
+    .join("");
+
+  const etiquettesHtml = etiquettes
+    .map((t, i) => (i % pasEtiquette === 0 || i === n - 1 ? `<text x="${MARGE.gauche + i * pasX}" y="${H - 8}" font-size="10" fill="var(--texte-att)" text-anchor="middle">${t}</text>` : ""))
+    .join("");
+
+  const traitMaintenant = indexMaintenant >= 0 ? `<line x1="${MARGE.gauche + indexMaintenant * pasX}" y1="${MARGE.haut}" x2="${MARGE.gauche + indexMaintenant * pasX}" y2="${MARGE.haut + zoneH}" stroke="var(--texte-att)" stroke-width="1" stroke-dasharray="3,3"/>` : "";
+
+  return `<svg viewBox="0 0 ${largeur} ${H}" width="100%" height="${H}" preserveAspectRatio="none" class="ma-graphique">
+    <text x="${MARGE.gauche}" y="${MARGE.haut - 8}" font-size="11" fill="var(--texte)" font-weight="700">${Math.round(max)}${unite}</text>
+    <text x="${MARGE.gauche}" y="${MARGE.haut + zoneH + 2}" font-size="11" fill="var(--texte-att)" font-weight="700">${Math.round(min)}${unite}</text>
+    ${traitMaintenant}
+    ${lignes}
+    ${etiquettesHtml}
+  </svg>`;
+}

@@ -18,6 +18,24 @@
   --rayon: 20px;
   --rayon-petit: 14px;
   --ombre: 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+  /* Fond dynamique (voir theme-meteo.js) : ces 3 variables sont réécrites en
+     JS selon la météo/heure réelles -- valeurs de secours ici pour le tout
+     premier rendu, avant le premier appel météo. */
+  --fond-haut-dyn: #1c2a52;
+  --fond-bas-dyn: #141b36;
+  --accent-meteo: #4fe0ff;
+}
+
+body.clair {
+  --fond-carte: rgba(10, 20, 45, 0.05);
+  --fond-carte-forte: rgba(10, 20, 45, 0.09);
+  --bordure: rgba(10, 20, 45, 0.12);
+  --texte: #12182b;
+  --texte-att: rgba(18, 24, 43, 0.64);
+  --texte-faible: rgba(18, 24, 43, 0.42);
+  --ombre: 0 18px 34px -18px rgba(20, 30, 60, 0.25);
+  --fond-haut-dyn: #dce8ff;
+  --fond-bas-dyn: #f4f7fd;
 }
 
 * { box-sizing: border-box; }
@@ -28,12 +46,14 @@ body {
   margin: 0;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--texte);
-  background: radial-gradient(120% 90% at 15% -10%, #1c2a52 0%, var(--fond-haut) 45%, var(--fond-bas) 100%);
+  background: radial-gradient(120% 90% at 15% -10%, var(--fond-haut-dyn) 0%, var(--fond-haut) 45%, var(--fond-bas-dyn) 100%);
   background-attachment: fixed;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  transition: background 0.8s ease;
 }
+body.clair { background: radial-gradient(120% 90% at 15% -10%, var(--fond-haut-dyn) 0%, var(--fond-bas-dyn) 100%); }
 
 .ma-app { max-width: 560px; margin: 0 auto; padding: 0 16px calc(88px + env(safe-area-inset-bottom, 0px)); min-height: 100vh; }
 
@@ -63,8 +83,14 @@ body {
 .ma-hero {
   border-radius: var(--rayon); padding: 26px 22px 22px;
   background: linear-gradient(160deg, rgba(79, 224, 255, 0.16), rgba(167, 139, 250, 0.08) 60%, var(--fond-carte));
-  border: 1px solid var(--bordure); box-shadow: var(--ombre);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--accent-meteo) 22%, transparent), rgba(167, 139, 250, 0.08) 60%, var(--fond-carte));
+  border: 1px solid var(--bordure);
+  box-shadow: var(--ombre);
+  box-shadow: var(--ombre), 0 30px 60px -30px color-mix(in srgb, var(--accent-meteo) 35%, transparent);
+  backdrop-filter: blur(16px);
   position: relative; overflow: hidden;
+  transition: background 0.8s ease, box-shadow 0.8s ease;
+  animation: ma-apparition 0.4s ease both;
 }
 .ma-hero-top { display: flex; align-items: flex-start; justify-content: space-between; }
 .ma-temp { font-size: 74px; font-weight: 800; line-height: 1; letter-spacing: -2px; }
@@ -134,13 +160,21 @@ body {
 .ma-conf-detail { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--bordure); }
 .ma-conf-detail.hidden { display: none; }
 .ma-conf-modeles { margin-top: 12px; }
+.ma-sous-scores { display: flex; gap: 8px; margin-bottom: 10px; }
+.ma-sous-score { flex: 1; background: rgba(255, 255, 255, 0.04); border-radius: 12px; padding: 8px 4px; text-align: center; }
+.ma-sous-score .lbl { display: block; font-size: 10px; color: var(--texte-att); text-transform: uppercase; letter-spacing: 0.03em; }
+.ma-sous-score .val { display: block; font-size: 17px; font-weight: 800; margin-top: 2px; }
 
 /* ── Graphique ───────────────────────────────────────────────────────── */
-.ma-carte { background: var(--fond-carte); border: 1px solid var(--bordure); border-radius: var(--rayon); padding: 16px; margin-top: 12px; }
+.ma-carte { background: var(--fond-carte); backdrop-filter: blur(14px); border: 1px solid var(--bordure); border-radius: var(--rayon); padding: 16px; margin-top: 12px; animation: ma-apparition 0.35s ease both; transition: transform 0.15s ease; }
+.ma-carte:active, .ma-carte-jour:active, .ma-stat:active, .ma-heure:active { transform: scale(0.97); }
 .ma-chips { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
 .ma-chip { padding: 7px 13px; border-radius: 999px; border: 1px solid var(--bordure); background: transparent; color: var(--texte-att); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .ma-chip.actif { background: var(--accent); color: #05222b; border-color: var(--accent); }
 .ma-graphique { display: block; overflow: visible; }
+.ma-legende-modeles { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 11px; color: var(--texte-att); }
+.ma-legende-modeles span { display: flex; align-items: center; gap: 5px; }
+.ma-legende-modeles i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 
 /* ── Aperçu des jours (cartes horizontales, sur l'accueil) ────────────── */
 .ma-jours-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; scrollbar-width: none; }
@@ -196,6 +230,16 @@ details[open] summary { margin-bottom: 4px; }
 .ma-detail.mauvais { color: var(--orange); }
 .ma-detail b { color: var(--texte); font-weight: 600; }
 
+/* ── Carte / radar ───────────────────────────────────────────────────── */
+.ma-radar-conteneur { width: 100%; height: 60vh; min-height: 320px; background: #0a0e1a; position: relative; }
+.ma-radar-conteneur .leaflet-fond-pane { filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.25); }
+.ma-radar-conteneur .leaflet-control-attribution { background: rgba(10, 14, 26, 0.7); color: var(--texte-att); font-size: 9px; }
+.ma-radar-conteneur .leaflet-control-attribution a { color: var(--texte-att); }
+.ma-radar-chargement { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--texte-att); font-size: 13px; padding: 20px; text-align: center; }
+.ma-radar-controles { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+.ma-radar-controles input[type="range"] { flex: 1; accent-color: var(--accent); }
+.ma-radar-heure { font-size: 12px; font-weight: 700; color: var(--texte-att); min-width: 44px; text-align: right; }
+
 /* ── Recherche ───────────────────────────────────────────────────────── */
 .ma-recherche-couche { position: fixed; inset: 0; z-index: 100; background: rgba(7, 10, 22, 0.92); backdrop-filter: blur(6px); padding: 16px; overflow-y: auto; }
 .ma-recherche-couche.hidden { display: none; }
@@ -216,6 +260,48 @@ details[open] summary { margin-bottom: 4px; }
 @keyframes ma-spin { to { transform: rotate(360deg); } }
 .ma-erreur button { margin-top: 14px; background: var(--accent); color: #05222b; border: none; border-radius: 999px; padding: 10px 20px; font-weight: 700; font-family: inherit; cursor: pointer; }
 .ma-hint { font-size: 12px; color: var(--texte-faible); text-align: center; margin-top: 18px; }
+
+/* ── Apparition douce (cartes, contenu d'onglet) ──────────────────────── */
+@keyframes ma-apparition { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+#ma-contenu { animation: ma-apparition 0.3s ease both; }
+
+/* ── Squelette de chargement ──────────────────────────────────────────── */
+.ma-squelette { border-radius: var(--rayon); }
+.ma-squelette-bloc { background: linear-gradient(100deg, var(--fond-carte) 30%, var(--fond-carte-forte) 50%, var(--fond-carte) 70%); background-size: 200% 100%; animation: ma-scintille 1.4s ease-in-out infinite; border-radius: var(--rayon-petit); }
+@keyframes ma-scintille { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── Badge "en direct" ────────────────────────────────────────────────── */
+.ma-heure.maintenant .h { display: flex; align-items: center; justify-content: center; gap: 4px; }
+.ma-point-direct { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; animation: ma-pulse-direct 1.4s ease-in-out infinite; }
+@keyframes ma-pulse-direct { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.7); } }
+
+/* ── Icônes météo : légère vie (soleil qui pulse, nuage qui dérive) ───── */
+.ma-hero-icone svg { animation: ma-icone-respire 4s ease-in-out infinite; transform-origin: center; }
+@keyframes ma-icone-respire { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.035) translateY(-2px); } }
+
+/* ── Barre de progression du jour (lever → maintenant → coucher) ─────── */
+.ma-jour-barre { position: relative; height: 6px; border-radius: 4px; background: rgba(255, 255, 255, 0.1); margin: 10px 0 6px; overflow: visible; }
+.ma-jour-barre i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 4px; background: linear-gradient(90deg, var(--or), var(--accent-meteo)); }
+.ma-jour-barre .curseur { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-meteo) 55%, transparent); transform: translate(-50%, -50%); }
+.ma-jour-heures { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--texte-att); }
+
+/* ── Pluie / neige animée (superposée sur la carte principale) ───────── */
+.ma-precip-overlay { position: absolute; inset: 0; overflow: hidden; pointer-events: none; border-radius: var(--rayon); opacity: 0.55; }
+.ma-goutte { position: absolute; top: -10%; width: 2px; height: 16px; background: linear-gradient(var(--accent-meteo), transparent); animation: ma-tombe linear infinite; }
+.ma-flocon { position: absolute; top: -10%; width: 5px; height: 5px; border-radius: 50%; background: #fff; animation: ma-tombe-flocon linear infinite; }
+@keyframes ma-tombe { to { transform: translateY(230px); } }
+@keyframes ma-tombe-flocon { to { transform: translate(var(--derive, 0px), 230px); } }
+
+/* ── Écran de démarrage ───────────────────────────────────────────────── */
+#ma-splash {
+  position: fixed; inset: 0; z-index: 999; background: radial-gradient(120% 90% at 15% -10%, #1c2a52 0%, #0b1224 45%, #141b36 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  transition: opacity 0.5s ease;
+}
+#ma-splash img { width: 84px; height: 84px; border-radius: 22px; animation: ma-splash-pulse 1.6s ease-in-out infinite; }
+#ma-splash span { color: #f3f6ff; font-family: "Inter", sans-serif; font-weight: 800; font-size: 17px; letter-spacing: 0.02em; }
+@keyframes ma-splash-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: 0.85; } }
+#ma-splash.ma-splash-cachee { opacity: 0; pointer-events: none; }
 
 @media (min-width: 620px) {
   .ma-hero-icone { width: 100px; height: 100px; }

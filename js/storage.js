@@ -44,6 +44,22 @@ export function retenirVille(ville) {
   ecrireJson(STORAGE_KEYS.derniereVille, ville);
 }
 
+// Mode voyage : une ville à venir avec une date, pour suivre sa météo avant
+// de partir (en plus des favoris classiques, sans date).
+export function listerVoyages() {
+  return lireJson(STORAGE_KEYS.voyages, []).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function ajouterVoyage(nom, admin, lat, lon, date) {
+  const voyages = listerVoyages();
+  voyages.push({ id: `${Date.now()}`, nom, admin, lat, lon, date });
+  ecrireJson(STORAGE_KEYS.voyages, voyages);
+}
+
+export function retirerVoyage(id) {
+  ecrireJson(STORAGE_KEYS.voyages, listerVoyages().filter((v) => v.id !== id));
+}
+
 export function lireReglages() {
   return lireJson(STORAGE_KEYS.reglages, {});
 }

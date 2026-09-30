@@ -4,20 +4,37 @@
 import { positionGPS, nomDeLaVille, rechercherVille } from "./geo.js";
 import { chargerActuel, chargerModeles } from "./meteo.js";
 import { afficherChargement, afficherErreur, afficherMeteo } from "./ui.js";
-import { derniereVille, retenirVille, listerFavoris, basculerFavori, estFavori } from "./storage.js";
+import { derniereVille, retenirVille, listerFavoris, basculerFavori, estFavori, lireReglages, sauverReglages } from "./storage.js";
+import { appliquerFondDynamique } from "./theme-meteo.js";
+import { noterReleveJournalier } from "./historique.js";
 
 const $ = (id) => document.getElementById(id);
 let lieuCourant = null;
+
+function cacherSplash() {
+  const el = $("ma-splash");
+  if (!el) return;
+  el.classList.add("ma-splash-cachee");
+  setTimeout(() => el.remove(), 600);
+}
+
+function appliquerTheme() {
+  document.body.classList.toggle("clair", lireReglages().theme === "clair");
+}
 
 async function chargerEtAfficher(lieu) {
   lieuCourant = lieu;
   afficherChargement();
   try {
     const [actuel, modeles] = await Promise.all([chargerActuel(lieu.lat, lieu.lon), chargerModeles(lieu.lat, lieu.lon)]);
+    appliquerFondDynamique(actuel.weathercode, actuel.is_day);
     afficherMeteo({ lieu, actuel, modeles });
     retenirVille(lieu);
+    noterReleveJournalier(lieu, actuel);
   } catch (e) {
     afficherErreur(e.message || "Impossible de récupérer la météo pour le moment.", () => chargerEtAfficher(lieu));
+  } finally {
+    cacherSplash();
   }
 }
 
@@ -135,7 +152,13 @@ function cablerUI() {
   });
   $("ma-reglages-btn").addEventListener("click", () => document.querySelector('[data-tab="reglages"]')?.click());
   window.addEventListener("ma-aller-a", (e) => chargerEtAfficher(e.detail));
+  window.addEventListener("ma-basculer-theme", () => {
+    const nouveau = lireReglages().theme === "clair" ? "sombre" : "clair";
+    sauverReglages({ theme: nouveau });
+    appliquerTheme();
+  });
 }
 
+appliquerTheme();
 cablerUI();
 demarrer();
