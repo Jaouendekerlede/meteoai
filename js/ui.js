@@ -10,6 +10,7 @@ import { rechercherVille } from "./geo.js";
 import { MENTION_COURTE, MENTION_LEGALE, VERSION_TEXTE } from "./mentions.js";
 import { categoriePrecip } from "./theme-meteo.js";
 import { releveVeille } from "./historique.js";
+import { creerLienSauvegarde } from "./restauration.js";
 import { initRadar, redimensionner, allerFrame, jouerPause, arreterLecture, infosFrame } from "./radar.js";
 
 const $ = (id) => document.getElementById(id);
@@ -565,6 +566,13 @@ function rendreReglages(etat) {
       </form>
     </div>
 
+    <div class="ma-section-titre">💾 Sauvegarde</div>
+    <div class="ma-carte">
+      <div class="ma-hint" style="margin-top:0;padding-bottom:10px">Favoris, voyages et réglages, gardés uniquement sur cet appareil. Crée un lien de sauvegarde à conserver (ou à t'envoyer par mail) : ouvre-le sur un nouveau téléphone pour tout retrouver, sans compte.</div>
+      <button type="button" class="ma-position-inline" id="ma-sauvegarde-btn" style="margin-top:0">💾 Créer un lien de sauvegarde</button>
+      <div class="ma-hint" id="ma-sauvegarde-retour" style="display:none"></div>
+    </div>
+
     <div class="ma-section-titre">À venir</div>
     <div class="ma-carte">
       <div class="ma-avenir">🤖 <div><b>Assistant IA</b><span>Poser une question sur la météo à venir, en langage naturel.</span></div></div>
@@ -583,6 +591,25 @@ function rendreReglages(etat) {
 
 function cablerReglages() {
   $("ma-theme-btn")?.addEventListener("click", () => window.dispatchEvent(new CustomEvent("ma-basculer-theme")));
+
+  $("ma-sauvegarde-btn")?.addEventListener("click", async () => {
+    const retour = $("ma-sauvegarde-retour");
+    retour.style.display = "block";
+    retour.textContent = "Préparation…";
+    try {
+      const { lien } = await creerLienSauvegarde();
+      if (navigator.share) {
+        await navigator.share({ title: "Sauvegarde Météo AI", text: "Ouvre ce lien sur ton téléphone pour retrouver tes réglages Météo AI.", url: lien });
+        retour.textContent = "✅ Lien partagé.";
+      } else {
+        await navigator.clipboard.writeText(lien);
+        retour.textContent = "✅ Lien copié dans le presse-papiers — colle-le dans un mail ou une note pour le garder.";
+      }
+    } catch (e) {
+      if (e.name !== "AbortError") retour.textContent = `⚠️ ${e.message || "Impossible de créer le lien."}`;
+      else retour.style.display = "none";
+    }
+  });
 
   document.querySelectorAll("[data-reg-fav]").forEach((el) =>
     el.addEventListener("click", (e) => {

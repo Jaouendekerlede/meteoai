@@ -7,6 +7,7 @@ import { afficherChargement, afficherErreur, afficherMeteo } from "./ui.js";
 import { derniereVille, retenirVille, listerFavoris, basculerFavori, estFavori, lireReglages, sauverReglages } from "./storage.js";
 import { appliquerFondDynamique } from "./theme-meteo.js";
 import { noterReleveJournalier } from "./historique.js";
+import { restaurerDepuisAdresse } from "./restauration.js";
 
 const $ = (id) => document.getElementById(id);
 let lieuCourant = null;
@@ -165,6 +166,19 @@ function cablerUI() {
   });
 }
 
-appliquerTheme();
-cablerUI();
-demarrer();
+async function demarrage() {
+  appliquerTheme();
+  cablerUI();
+  try {
+    const restaures = await restaurerDepuisAdresse();
+    if (restaures !== null) {
+      appliquerTheme();
+      alert(`✅ ${restaures} éléments restaurés (favoris, voyages, réglages).`);
+    }
+  } catch (e) {
+    alert(`⚠️ Lien de sauvegarde invalide : ${e.message}`);
+  }
+  demarrer();
+}
+
+demarrage();

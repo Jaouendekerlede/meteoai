@@ -67,3 +67,30 @@ export function lireReglages() {
 export function sauverReglages(partiel) {
   ecrireJson(STORAGE_KEYS.reglages, { ...lireReglages(), ...partiel });
 }
+
+// ── Sauvegarde / restauration (toutes les clés "meteoai_") ──────────────
+const PREFIXE = "meteoai_";
+const FORMAT_SAUVEGARDE = "meteoai-sauvegarde";
+
+export function exporterDonnees() {
+  const donnees = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const cle = localStorage.key(i);
+    if (cle?.startsWith(PREFIXE)) donnees[cle] = localStorage.getItem(cle);
+  }
+  return { format: FORMAT_SAUVEGARDE, version: 1, date: new Date().toISOString(), donnees };
+}
+
+// Remplace les données de cet appareil par celles de la sauvegarde. Renvoie
+// le nombre d'éléments restaurés, ou lève une erreur si ce n'en est pas une.
+export function importerDonnees(sauvegarde) {
+  if (sauvegarde?.format !== FORMAT_SAUVEGARDE || typeof sauvegarde.donnees !== "object") {
+    throw new Error("ce lien n'est pas une sauvegarde Météo AI");
+  }
+  const entrees = Object.entries(sauvegarde.donnees).filter(([cle, valeur]) => cle.startsWith(PREFIXE) && typeof valeur === "string");
+  const anciennes = [];
+  for (let i = 0; i < localStorage.length; i++) if (localStorage.key(i)?.startsWith(PREFIXE)) anciennes.push(localStorage.key(i));
+  for (const cle of anciennes) localStorage.removeItem(cle);
+  for (const [cle, valeur] of entrees) localStorage.setItem(cle, valeur);
+  return entrees.length;
+}
