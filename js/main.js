@@ -10,6 +10,7 @@ import { noterReleveJournalier } from "./historique.js";
 import { restaurerDepuisAdresse } from "./restauration.js";
 import { indexMaintenant } from "./donnees-modeles.js";
 import { calculerAlertes } from "./alertes-meteo.js";
+import { icone, infoCode } from "./icones-meteo.js";
 
 const $ = (id) => document.getElementById(id);
 let lieuCourant = null;
@@ -98,18 +99,21 @@ function demarrer() {
 
 // ── Recherche ────────────────────────────────────────────────────────────
 
+let jetonFavoris = 0;
 function rendreFavoris() {
   const favoris = listerFavoris();
   if (!favoris.length) {
     $("ma-recherche-favoris").innerHTML = "";
     return;
   }
+  const jeton = ++jetonFavoris;
   $("ma-recherche-favoris").innerHTML =
     `<div class="ma-recherche-titre">Favoris</div>` +
     favoris
       .map(
         (f, i) => `<div class="ma-favori" data-fav="${i}">
-      <div><div class="nom">${f.nom}</div><div class="admin">${f.admin || ""}</div></div>
+      <div class="ma-favori-info"><div class="nom">${f.nom}</div><div class="admin">${f.admin || ""}</div></div>
+      <div class="ma-favori-meteo" id="ma-favori-meteo-${i}"><span class="ma-squelette-bloc"></span></div>
       <button type="button" class="ma-favori-etoile" data-fav-retirer="${i}">★</button>
     </div>`,
       )
@@ -129,6 +133,21 @@ function rendreFavoris() {
       rendreFavoris();
     }),
   );
+  favoris.forEach((f, i) => {
+    chargerActuel(f.lat, f.lon)
+      .then((actuel) => {
+        if (jeton !== jetonFavoris) return;
+        const el = $(`ma-favori-meteo-${i}`);
+        if (!el) return;
+        const info = infoCode(actuel.weathercode, actuel.is_day);
+        el.innerHTML = `${icone(info.icone, 20)}<span>${Math.round(actuel.temperature_2m)}°</span>`;
+      })
+      .catch(() => {
+        if (jeton !== jetonFavoris) return;
+        const el = $(`ma-favori-meteo-${i}`);
+        if (el) el.innerHTML = "";
+      });
+  });
 }
 
 let jetonRecherche = 0;

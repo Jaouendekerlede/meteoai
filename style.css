@@ -242,7 +242,7 @@ details[open] summary { margin-bottom: 4px; }
 
 /* ── Carte / radar ───────────────────────────────────────────────────── */
 .ma-radar-conteneur { width: 100%; height: 60vh; min-height: 320px; background: #0a0e1a; position: relative; }
-.ma-radar-conteneur .leaflet-fond-pane { filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.25); }
+.ma-radar-conteneur .leaflet-fond-pane { filter: invert(1) hue-rotate(180deg) brightness(1.4) contrast(1.05) saturate(0.65); }
 .ma-radar-conteneur .leaflet-control-attribution { background: rgba(10, 14, 26, 0.7); color: var(--texte-att); font-size: 9px; }
 .ma-radar-conteneur .leaflet-control-attribution a { color: var(--texte-att); }
 .ma-radar-chargement { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--texte-att); font-size: 13px; padding: 20px; text-align: center; }
@@ -258,10 +258,14 @@ details[open] summary { margin-bottom: 4px; }
 .ma-recherche-barre input:focus { outline: 2px solid var(--accent); }
 .ma-recherche-fermer { background: none; border: none; color: var(--texte); font-size: 22px; cursor: pointer; padding: 6px; }
 .ma-position-inline { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 14px; padding: 13px 16px; background: var(--fond-carte-forte); border: 1px solid var(--bordure); border-radius: var(--rayon-petit); color: var(--accent); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
-.ma-resultat, .ma-favori { display: flex; align-items: center; justify-content: space-between; padding: 14px 6px; border-bottom: 1px solid var(--bordure); cursor: pointer; }
+.ma-resultat, .ma-favori { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 6px; border-bottom: 1px solid var(--bordure); cursor: pointer; }
 .ma-resultat .nom, .ma-favori .nom { font-weight: 700; font-size: 14.5px; }
 .ma-resultat .admin, .ma-favori .admin { font-size: 12px; color: var(--texte-att); }
-.ma-favori-etoile { color: var(--or); background: none; border: none; font-size: 19px; cursor: pointer; padding: 6px; }
+.ma-favori-info { flex: 1; min-width: 0; }
+.ma-favori-etoile { color: var(--or); background: none; border: none; font-size: 19px; cursor: pointer; padding: 6px; flex: 0 0 auto; }
+.ma-favori-meteo { display: flex; align-items: center; gap: 4px; font-size: 13.5px; font-weight: 700; color: var(--texte); flex: 0 0 auto; min-width: 44px; justify-content: flex-end; }
+.ma-favori-meteo svg { width: 20px; height: 20px; flex: 0 0 auto; }
+.ma-favori-meteo .ma-squelette-bloc { width: 32px; height: 13px; }
 .ma-recherche-titre { font-size: 12.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texte-att); margin: 22px 4px 4px; }
 
 /* ── États ───────────────────────────────────────────────────────────── */
