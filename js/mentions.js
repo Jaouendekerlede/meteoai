@@ -2,8 +2,8 @@
 
 export const PROPRIETAIRE = "Jean-Luc RIO";
 export const ANNEE = 2026;
-export const VERSION = 3;
-export const VERSION_TEXTE = "Version 3 : radar en direct, graphiques enrichis, thème dynamique, mode voyage";
+export const VERSION = 4;
+export const VERSION_TEXTE = "Version 4 : correction de la barre de statut en mode clair";
 
 export const MENTION_COURTE = `© ${ANNEE} ${PROPRIETAIRE} — Tous droits réservés`;
 

@@ -19,7 +19,13 @@ function cacherSplash() {
 }
 
 function appliquerTheme() {
-  document.body.classList.toggle("clair", lireReglages().theme === "clair");
+  const clair = lireReglages().theme === "clair";
+  document.body.classList.toggle("clair", clair);
+  // La barre de statut du téléphone (couleur pilotée par cette balise) doit
+  // suivre le thème -- sinon elle reste sombre au-dessus d'un fond clair (ou
+  // l'inverse), ce qui donne une bande visiblement décalée en haut de
+  // l'écran. Signalé par l'utilisateur le 2026-09-30.
+  $("ma-meta-theme")?.setAttribute("content", clair ? "#dce8ff" : "#0b1224");
 }
 
 async function chargerEtAfficher(lieu) {
