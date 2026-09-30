@@ -6,6 +6,7 @@ import { calculerConfiance } from "./confiance.js";
 import { courbe } from "./graphique.js";
 import { MODELES, LABELS_MODELES, JOURS_PREVISION } from "./config.js";
 import { estFavori, listerFavoris, basculerFavori } from "./storage.js";
+import { MENTION_COURTE, MENTION_LEGALE, VERSION_TEXTE } from "./mentions.js";
 
 const $ = (id) => document.getElementById(id);
 const arrondi = (x) => (Number.isFinite(x) ? Math.round(x) : "—");
@@ -409,7 +410,13 @@ function rendreReglages(etat) {
       <div class="ma-avenir">🚗 <div><b>Météo sur trajet + mode véhicule électrique</b><span>Impact de la météo sur l'autonomie, pensé pour ta Kona Electric.</span></div></div>
     </div>
 
+    <div class="ma-carte">
+      <details><summary>⚖️ Mentions légales</summary><p class="ma-hint" style="text-align:left;margin-top:8px">${MENTION_LEGALE}</p></details>
+    </div>
+
     <div class="ma-hint">Météo AI · données Open-Meteo (${MODELES.length} modèles) · sans compte, sans clé</div>
+    <div class="ma-hint">${MENTION_COURTE}</div>
+    <div class="ma-hint">${VERSION_TEXTE}</div>
   </section>`;
 }
 

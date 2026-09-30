@@ -179,6 +179,10 @@ body {
 .ma-avenir b { display: block; font-size: 13.5px; }
 .ma-avenir span { display: block; font-size: 12px; color: var(--texte-att); margin-top: 2px; }
 
+details summary { cursor: pointer; font-weight: 700; font-size: 13px; list-style: none; }
+details summary::-webkit-details-marker { display: none; }
+details[open] summary { margin-bottom: 4px; }
+
 /* ── Comparaison des modèles ─────────────────────────────────────────── */
 .ma-modele { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid var(--bordure); }
 .ma-modele:last-child { border-bottom: none; }
