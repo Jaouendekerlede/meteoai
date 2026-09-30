@@ -69,22 +69,27 @@ export function infosFrame() {
 export async function initRadar(conteneurId, lat, lon, onChange) {
   surChangement = onChange || (() => {});
   await chargerLeaflet();
-  if (!carte) {
-    carte = L.map(conteneurId, { zoomControl: false, attributionControl: false }).setView([lat, lon], 7);
-    // OpenStreetMap (gratuit, sans clé) -- inversé en CSS (voir style.css,
-    // pane "fond" seulement) pour rester sombre comme le reste de l'appli ;
-    // le radar, dans son propre pane, n'est pas affecté par ce filtre.
-    carte.createPane("fond");
-    carte.getPane("fond").style.zIndex = 200;
-    carte.createPane("radar");
-    carte.getPane("radar").style.zIndex = 400;
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { pane: "fond", maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(carte);
-    L.control.attribution({ position: "bottomleft", prefix: false }).addTo(carte);
-    L.control.zoom({ position: "bottomright" }).addTo(carte);
-    L.marker([lat, lon]).addTo(carte);
-  } else {
-    carte.setView([lat, lon], carte.getZoom());
+  // Le <div id="conteneurId"> est recréé à chaque fois que l'onglet Carte est
+  // rouvert (rendreCarte() régénère le HTML), donc l'ancienne carte Leaflet
+  // pointe alors vers un nœud DOM détaché et invisible : il faut la détruire
+  // et en recréer une neuve liée au nouveau conteneur à chaque appel.
+  if (carte) {
+    carte.remove();
+    carte = null;
+    coucheRadar = null;
   }
+  carte = L.map(conteneurId, { zoomControl: false, attributionControl: false }).setView([lat, lon], 7);
+  // OpenStreetMap (gratuit, sans clé) -- inversé en CSS (voir style.css,
+  // pane "fond" seulement) pour rester sombre comme le reste de l'appli ;
+  // le radar, dans son propre pane, n'est pas affecté par ce filtre.
+  carte.createPane("fond");
+  carte.getPane("fond").style.zIndex = 200;
+  carte.createPane("radar");
+  carte.getPane("radar").style.zIndex = 400;
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { pane: "fond", maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(carte);
+  L.control.attribution({ position: "bottomleft", prefix: false }).addTo(carte);
+  L.control.zoom({ position: "bottomright" }).addTo(carte);
+  L.marker([lat, lon]).addTo(carte);
   await chargerFrames();
   afficherFrameActuelle();
   setTimeout(() => carte.invalidateSize(), 60);

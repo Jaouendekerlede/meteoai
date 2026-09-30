@@ -2,8 +2,8 @@
 
 export const PROPRIETAIRE = "Jean-Luc RIO";
 export const ANNEE = 2026;
-export const VERSION = 7;
-export const VERSION_TEXTE = "Version 7 : alertes météo, notifications, rafraîchissement auto, confiance affinée";
+export const VERSION = 8;
+export const VERSION_TEXTE = "Version 8 : correction de la carte radar (écran noir après un second passage sur l'onglet Carte)";
 
 export const MENTION_COURTE = `© ${ANNEE} ${PROPRIETAIRE} — Tous droits réservés`;
 
