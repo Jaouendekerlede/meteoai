@@ -17,8 +17,9 @@ export const LABELS_MODELES = {
   icon_seamless: "ICON (Allemagne)",
 };
 
-export const CHAMPS_HORAIRES = ["temperature_2m", "precipitation_probability", "precipitation", "wind_speed_10m", "wind_gusts_10m", "cloud_cover", "relative_humidity_2m", "weathercode", "is_day"];
+export const CHAMPS_HORAIRES = ["temperature_2m", "precipitation_probability", "precipitation", "wind_speed_10m", "wind_gusts_10m", "cloud_cover", "relative_humidity_2m", "weathercode", "is_day", "uv_index"];
 export const CHAMPS_JOURNALIERS = ["temperature_2m_max", "temperature_2m_min", "precipitation_sum", "precipitation_probability_max", "weathercode", "wind_speed_10m_max", "wind_gusts_10m_max", "uv_index_max", "sunrise", "sunset"];
+export const JOURS_PREVISION = 10;
 
 export const STORAGE_KEYS = {
   favoris: "meteoai_favoris",

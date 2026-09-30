@@ -17,20 +17,27 @@
       <div class="ma-lieu" id="ma-lieu-btn">
         <span id="ma-lieu-icone">📍</span>
         <span>
-          <span id="ma-lieu-nom">—</span>
+          <span class="ma-lieu-ligne1"><span id="ma-lieu-nom">—</span><span class="ma-chevron">⌄</span></span>
           <small id="ma-lieu-admin"></small>
         </span>
       </div>
       <div class="ma-boutons-entete">
-        <button type="button" class="ma-icone-btn" id="ma-favori-btn" title="Favori">☆</button>
-        <button type="button" class="ma-icone-btn" id="ma-position-btn" title="Ma position">🧭</button>
         <button type="button" class="ma-icone-btn" id="ma-recherche-btn" title="Rechercher une ville">🔍</button>
+        <button type="button" class="ma-icone-btn" id="ma-favori-btn" title="Favori">☆</button>
+        <button type="button" class="ma-icone-btn" id="ma-reglages-btn" title="Réglages">⚙️</button>
       </div>
     </header>
 
     <main id="ma-contenu">
       <div class="ma-chargement"><div class="spin"></div>Chargement de la météo…</div>
     </main>
+
+    <nav class="ma-tabbar" id="ma-tabbar">
+      <button type="button" class="ma-tab" data-tab="accueil"><span class="ic">🏠</span>Accueil</button>
+      <button type="button" class="ma-tab" data-tab="graphiques"><span class="ic">📈</span>Graphiques</button>
+      <button type="button" class="ma-tab" data-tab="jours"><span class="ic">📅</span>10 jours</button>
+      <button type="button" class="ma-tab" data-tab="reglages"><span class="ic">⚙️</span>Réglages</button>
+    </nav>
   </div>
 
   <div class="ma-recherche-couche hidden" id="ma-recherche-couche">
@@ -38,6 +45,7 @@
       <input type="text" id="ma-recherche-input" placeholder="Rechercher une ville…" autocomplete="off" enterkeyhint="search">
       <button type="button" class="ma-recherche-fermer" id="ma-recherche-fermer">✕</button>
     </div>
+    <button type="button" class="ma-position-inline" id="ma-position-btn">🧭 Utiliser ma position actuelle</button>
     <div id="ma-recherche-favoris"></div>
     <div id="ma-recherche-resultats"></div>
   </div>

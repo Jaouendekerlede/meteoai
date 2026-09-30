@@ -35,7 +35,7 @@ body {
   overflow-x: hidden;
 }
 
-.ma-app { max-width: 560px; margin: 0 auto; padding: 0 16px 100px; min-height: 100vh; }
+.ma-app { max-width: 560px; margin: 0 auto; padding: 0 16px calc(88px + env(safe-area-inset-bottom, 0px)); min-height: 100vh; }
 
 /* ── En-tête ─────────────────────────────────────────────────────────── */
 .ma-entete {
@@ -46,7 +46,9 @@ body {
 }
 .ma-lieu { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; min-width: 0; flex: 1 1 auto; cursor: pointer; }
 .ma-lieu > span:last-child { min-width: 0; overflow: hidden; }
+.ma-lieu-ligne1 { display: flex; align-items: center; gap: 4px; overflow: hidden; }
 .ma-lieu #ma-lieu-nom { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ma-chevron { font-size: 13px; color: var(--texte-att); flex: 0 0 auto; }
 .ma-lieu small { display: block; font-size: 11.5px; font-weight: 500; color: var(--texte-att); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ma-boutons-entete { display: flex; gap: 8px; flex: 0 0 auto; }
 .ma-icone-btn {
@@ -73,24 +75,23 @@ body {
 .ma-hero-minmax { display: flex; gap: 14px; margin-top: 14px; font-size: 13.5px; font-weight: 600; }
 .ma-hero-minmax span.max { color: var(--or); }
 .ma-hero-minmax span.min { color: var(--accent); }
-
-/* ── Pastille de confiance ───────────────────────────────────────────── */
-.ma-confiance { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 700; margin-top: 16px; border: 1px solid transparent; cursor: pointer; }
-.ma-confiance .pt { font-weight: 900; }
-.ma-confiance.haute { background: rgba(51, 209, 122, 0.16); color: var(--vert); border-color: rgba(51, 209, 122, 0.35); }
-.ma-confiance.moyenne { background: rgba(255, 165, 82, 0.16); color: var(--orange); border-color: rgba(255, 165, 82, 0.35); }
-.ma-confiance.basse { background: rgba(255, 107, 107, 0.16); color: var(--rouge); border-color: rgba(255, 107, 107, 0.35); }
+.ma-hero.nuit { background: linear-gradient(160deg, rgba(167, 139, 250, 0.18), rgba(79, 224, 255, 0.05) 60%, var(--fond-carte)); }
+.ma-hero.nuit .ma-hero-icone { color: #cdd6ff; filter: drop-shadow(0 6px 16px rgba(160, 170, 255, 0.3)); }
 
 /* ── Grille de stats rapides ─────────────────────────────────────────── */
-.ma-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
-.ma-stat { background: var(--fond-carte); border: 1px solid var(--bordure); border-radius: var(--rayon-petit); padding: 10px 6px; text-align: center; }
+.ma-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); gap: 8px; margin-top: 16px; }
+.ma-stat { background: var(--fond-carte); border: 1px solid var(--bordure); border-radius: var(--rayon-petit); padding: 10px 6px; text-align: center; position: relative; }
 .ma-stat svg { color: var(--accent); margin-bottom: 4px; }
 .ma-stat .val { font-size: 14.5px; font-weight: 800; display: block; }
 .ma-stat .lbl { font-size: 10px; color: var(--texte-att); text-transform: uppercase; letter-spacing: 0.03em; }
+.ma-stat .sous { display: block; font-size: 9.5px; color: var(--texte-faible); margin-top: 1px; }
 
 /* ── Sections génériques ─────────────────────────────────────────────── */
 .ma-section { margin-top: 22px; }
 .ma-section-titre { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texte-att); margin: 0 0 10px 2px; }
+.ma-section-titre-ligne { display: flex; align-items: center; justify-content: space-between; }
+.ma-section-titre-ligne .ma-section-titre { margin: 0; }
+.ma-voir-tout { background: none; border: none; color: var(--accent); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 4px; }
 
 /* ── Bande horaire ───────────────────────────────────────────────────── */
 .ma-horaires { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; scrollbar-width: none; }
@@ -102,10 +103,37 @@ body {
 .ma-heure .t { font-size: 14.5px; font-weight: 800; }
 .ma-heure .p { font-size: 10.5px; color: var(--accent); font-weight: 700; margin-top: 2px; }
 
-/* ── Onglets ─────────────────────────────────────────────────────────── */
-.ma-onglets { display: flex; gap: 6px; background: var(--fond-carte); border: 1px solid var(--bordure); border-radius: 999px; padding: 4px; }
-.ma-onglet { flex: 1; text-align: center; padding: 9px 4px; border-radius: 999px; font-size: 12.5px; font-weight: 700; color: var(--texte-att); cursor: pointer; border: none; background: none; font-family: inherit; }
-.ma-onglet.actif { background: var(--accent); color: #05222b; }
+/* ── Barre de navigation basse ───────────────────────────────────────── */
+.ma-tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  display: flex; justify-content: space-around;
+  background: rgba(11, 18, 36, 0.88); backdrop-filter: blur(14px);
+  border-top: 1px solid var(--bordure);
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+}
+.ma-tabbar.hidden { display: none; }
+.ma-tab {
+  flex: 1; max-width: 120px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; border: none; color: var(--texte-faible); font-family: inherit; font-size: 10.5px; font-weight: 700;
+  padding: 4px 2px; cursor: pointer; border-radius: 12px;
+}
+.ma-tab .ic { font-size: 19px; line-height: 1; filter: grayscale(1); opacity: 0.7; }
+.ma-tab.actif { color: var(--accent); }
+.ma-tab.actif .ic { filter: none; opacity: 1; }
+
+/* ── Anneau de confiance ─────────────────────────────────────────────── */
+.ma-conf-carte { padding: 12px 14px; }
+.ma-conf-ligne { display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: none; color: inherit; font-family: inherit; text-align: left; cursor: pointer; padding: 0; }
+.ma-anneau-wrap { position: relative; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+.ma-anneau-val { position: absolute; font-size: 14px; font-weight: 800; }
+.ma-conf-texte { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.ma-conf-texte b { font-size: 13.5px; }
+.ma-conf-texte span { font-size: 12px; color: var(--texte-att); }
+.ma-chevron-down { color: var(--texte-att); transition: transform 0.2s; flex: 0 0 auto; }
+.ma-conf-ligne.ouvert .ma-chevron-down { transform: rotate(180deg); }
+.ma-conf-detail { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--bordure); }
+.ma-conf-detail.hidden { display: none; }
+.ma-conf-modeles { margin-top: 12px; }
 
 /* ── Graphique ───────────────────────────────────────────────────────── */
 .ma-carte { background: var(--fond-carte); border: 1px solid var(--bordure); border-radius: var(--rayon); padding: 16px; margin-top: 12px; }
@@ -114,17 +142,42 @@ body {
 .ma-chip.actif { background: var(--accent); color: #05222b; border-color: var(--accent); }
 .ma-graphique { display: block; overflow: visible; }
 
-/* ── Liste des jours ─────────────────────────────────────────────────── */
-.ma-jour { display: grid; grid-template-columns: 64px 32px 1fr 96px; align-items: center; gap: 10px; padding: 11px 4px; border-bottom: 1px solid var(--bordure); }
-.ma-jour:last-child { border-bottom: none; }
-.ma-jour .nom { font-size: 13.5px; font-weight: 700; }
-.ma-jour .nom small { display: block; font-size: 10.5px; color: var(--texte-att); font-weight: 500; }
-.ma-jour .pluie { font-size: 11px; color: var(--accent); font-weight: 700; text-align: right; }
-.ma-barre-temp { position: relative; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.08); }
-.ma-barre-temp i { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--or)); }
-.ma-jour-minmax { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; margin-top: 3px; }
-.ma-jour-minmax .min { color: var(--texte-att); }
+/* ── Aperçu des jours (cartes horizontales, sur l'accueil) ────────────── */
+.ma-jours-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; scrollbar-width: none; }
+.ma-jours-scroll::-webkit-scrollbar { display: none; }
+.ma-carte-jour { flex: 0 0 auto; width: 84px; background: var(--fond-carte); border: 1px solid var(--bordure); border-radius: var(--rayon-petit); padding: 12px 6px; text-align: center; }
+.ma-carte-jour b { font-size: 12px; display: block; margin-bottom: 4px; }
+.ma-carte-jour svg { margin: 2px 0; }
+.ma-carte-jour .mm { font-size: 12.5px; font-weight: 800; margin-top: 4px; }
+.ma-carte-jour .mm .min { color: var(--texte-att); font-weight: 600; }
+.ma-carte-jour .mm .max { color: var(--or); }
+.ma-carte-jour-pluie { font-size: 10px; color: var(--accent); margin-top: 5px; }
+.ma-carte-jour-conf { font-size: 10px; font-weight: 700; margin-top: 3px; }
+
+/* ── Liste complète des jours (onglet "10 jours") ─────────────────────── */
+.ma-jour-ligne { display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: none; color: inherit; font-family: inherit; text-align: left; cursor: pointer; padding: 0; }
+.ma-jour-nom { flex: 0 0 74px; font-size: 13.5px; font-weight: 700; }
+.ma-jour-nom small { display: block; font-size: 10.5px; color: var(--texte-att); font-weight: 500; }
+.ma-jour-chiffres { flex: 1 1 auto; min-width: 0; }
+.ma-jour-minmax { font-size: 14px; font-weight: 800; }
+.ma-jour-minmax .min { color: var(--texte-att); font-weight: 600; margin-left: 4px; }
 .ma-jour-minmax .max { color: var(--or); }
+.ma-jour-sous { font-size: 11px; color: var(--texte-att); margin-top: 2px; }
+.ma-conf-mini { flex: 0 0 auto; font-size: 15px; font-weight: 800; }
+
+/* ── Lever / coucher du soleil ─────────────────────────────────────────── */
+.ma-soleil { display: flex; align-items: center; margin-top: 14px; }
+.ma-soleil-icone { color: var(--or); flex: 0 0 auto; }
+.ma-soleil-texte { flex: 1; text-align: center; display: flex; flex-direction: column; }
+.ma-soleil-texte b { font-size: 11px; color: var(--texte-att); font-weight: 600; }
+.ma-soleil-texte span { font-size: 15px; font-weight: 800; }
+.ma-soleil-sep { width: 1px; align-self: stretch; background: var(--bordure); margin: 0 8px; }
+
+/* ── Réglages : "à venir" ───────────────────────────────────────────────── */
+.ma-avenir { display: flex; gap: 12px; align-items: flex-start; padding: 11px 2px; font-size: 20px; border-bottom: 1px solid var(--bordure); }
+.ma-avenir:last-child { border-bottom: none; }
+.ma-avenir b { display: block; font-size: 13.5px; }
+.ma-avenir span { display: block; font-size: 12px; color: var(--texte-att); margin-top: 2px; }
 
 /* ── Comparaison des modèles ─────────────────────────────────────────── */
 .ma-modele { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid var(--bordure); }
@@ -146,6 +199,7 @@ body {
 .ma-recherche-barre input { flex: 1; background: var(--fond-carte-forte); border: 1px solid var(--bordure); border-radius: 999px; padding: 13px 18px; color: var(--texte); font-size: 15px; font-family: inherit; }
 .ma-recherche-barre input:focus { outline: 2px solid var(--accent); }
 .ma-recherche-fermer { background: none; border: none; color: var(--texte); font-size: 22px; cursor: pointer; padding: 6px; }
+.ma-position-inline { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 14px; padding: 13px 16px; background: var(--fond-carte-forte); border: 1px solid var(--bordure); border-radius: var(--rayon-petit); color: var(--accent); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .ma-resultat, .ma-favori { display: flex; align-items: center; justify-content: space-between; padding: 14px 6px; border-bottom: 1px solid var(--bordure); cursor: pointer; }
 .ma-resultat .nom, .ma-favori .nom { font-weight: 700; font-size: 14.5px; }
 .ma-resultat .admin, .ma-favori .admin { font-size: 12px; color: var(--texte-att); }

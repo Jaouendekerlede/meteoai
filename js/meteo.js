@@ -2,7 +2,7 @@
 // modèle du moment, choisi par Open-Meteo lui-même) + prévisions de
 // plusieurs modèles séparés, pour pouvoir les comparer (voir confiance.js).
 
-import { API_METEO, MODELES, CHAMPS_HORAIRES, CHAMPS_JOURNALIERS } from "./config.js";
+import { API_METEO, MODELES, CHAMPS_HORAIRES, CHAMPS_JOURNALIERS, JOURS_PREVISION } from "./config.js";
 
 async function appelJson(params) {
   const r = await fetch(`${API_METEO}?${params}`);
@@ -32,7 +32,7 @@ function regrouperParModele(bloc, champs) {
   return { temps, parChamp };
 }
 
-export async function chargerModeles(lat, lon, { jours = 8 } = {}) {
+export async function chargerModeles(lat, lon, { jours = JOURS_PREVISION } = {}) {
   const p = new URLSearchParams({
     latitude: lat,
     longitude: lon,

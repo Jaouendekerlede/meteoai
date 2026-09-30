@@ -22,11 +22,12 @@ async function chargerEtAfficher(lieu) {
 }
 
 async function utiliserPositionGPS() {
+  fermerRecherche();
   afficherChargement();
   try {
     const p = await positionGPS();
     const v = await nomDeLaVille(p.lat, p.lon);
-    chargerEtAfficher({ nom: v.nom, admin: v.admin, lat: p.lat, lon: p.lon });
+    chargerEtAfficher({ nom: v.nom, admin: v.admin, lat: p.lat, lon: p.lon, viaGPS: true });
   } catch (e) {
     afficherErreur(e.message, utiliserPositionGPS);
   }
@@ -132,6 +133,8 @@ function cablerUI() {
     $("ma-favori-btn").textContent = actif ? "★" : "☆";
     $("ma-favori-btn").classList.toggle("actif", actif);
   });
+  $("ma-reglages-btn").addEventListener("click", () => document.querySelector('[data-tab="reglages"]')?.click());
+  window.addEventListener("ma-aller-a", (e) => chargerEtAfficher(e.detail));
 }
 
 cablerUI();
