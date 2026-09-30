@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="theme-color" content="#0b1224">
+  <meta name="description" content="Météo précise avec comparaison de plusieurs modèles et score de confiance.">
+  <title>Météo AI</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="ma-app">
+    <header class="ma-entete">
+      <div class="ma-lieu" id="ma-lieu-btn">
+        <span id="ma-lieu-icone">📍</span>
+        <span>
+          <span id="ma-lieu-nom">—</span>
+          <small id="ma-lieu-admin"></small>
+        </span>
+      </div>
+      <div class="ma-boutons-entete">
+        <button type="button" class="ma-icone-btn" id="ma-favori-btn" title="Favori">☆</button>
+        <button type="button" class="ma-icone-btn" id="ma-position-btn" title="Ma position">🧭</button>
+        <button type="button" class="ma-icone-btn" id="ma-recherche-btn" title="Rechercher une ville">🔍</button>
+      </div>
+    </header>
+
+    <main id="ma-contenu">
+      <div class="ma-chargement"><div class="spin"></div>Chargement de la météo…</div>
+    </main>
+  </div>
+
+  <div class="ma-recherche-couche hidden" id="ma-recherche-couche">
+    <div class="ma-recherche-barre">
+      <input type="text" id="ma-recherche-input" placeholder="Rechercher une ville…" autocomplete="off" enterkeyhint="search">
+      <button type="button" class="ma-recherche-fermer" id="ma-recherche-fermer">✕</button>
+    </div>
+    <div id="ma-recherche-favoris"></div>
+    <div id="ma-recherche-resultats"></div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js"));
+  </script>
+</body>
+</html>
