@@ -2,8 +2,8 @@
 
 export const PROPRIETAIRE = "Jean-Luc RIO";
 export const ANNEE = 2026;
-export const VERSION = 11;
-export const VERSION_TEXTE = "Version 11 : touchez un jour dans la liste \"10 jours\" pour voir ses prévisions heure par heure";
+export const VERSION = 12;
+export const VERSION_TEXTE = "Version 12 : touchez un jour (même dans l'aperçu de l'accueil) pour voir ses prévisions heure par heure";
 
 export const MENTION_COURTE = `© ${ANNEE} ${PROPRIETAIRE} — Tous droits réservés`;
 

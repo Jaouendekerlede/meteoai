@@ -150,6 +150,11 @@ let onglet = "accueil";
 let metriqueGraphique = "temperature_2m";
 let comparerModeles = false;
 let etatCourant = null;
+// Index du jour a deplier automatiquement a la prochaine ouverture de
+// l'onglet "10 jours" -- pose par un clic sur une carte-apercu de l'accueil
+// (compacte, pas de volet sur place) pour amener directement au detail de
+// ce jour precis, demande explicite du 2026-10-09.
+let jourAOuvrirAuChangementOnglet = null;
 const COULEURS_MODELES = ["#4fe0ff", "#ffc857", "#a78bfa", "#ff8fa3"];
 
 export function afficherMeteo(etat) {
@@ -199,7 +204,29 @@ function afficherOnglet(nom) {
   cablerConfiance();
   if (nom === "accueil") {
     $("ma-voir-tout-btn")?.addEventListener("click", () => afficherOnglet("jours"));
+    // Les cartes-apercu (Dem., Dim., Lun...) sont compactes, sans volet sur
+    // place -- un tap amene directement au detail heure par heure de ce
+    // jour dans l'onglet "10 jours", au lieu de rester sans effet visible
+    // (signale par l'utilisateur le 2026-10-09 : "je clique sur un jour,
+    // j'ai pas le detail").
+    document.querySelectorAll("[data-jour-apercu]").forEach((el) =>
+      el.addEventListener("click", () => {
+        jourAOuvrirAuChangementOnglet = Number(el.dataset.jourApercu);
+        afficherOnglet("jours");
+      }),
+    );
     animerNombres();
+  }
+  if (nom === "jours" && jourAOuvrirAuChangementOnglet !== null) {
+    const idx = jourAOuvrirAuChangementOnglet;
+    jourAOuvrirAuChangementOnglet = null;
+    const detail = $(`ma-conf-detail-jour${idx}`);
+    const btn = document.querySelector(`[data-conf-toggle="jour${idx}"]`);
+    if (detail && btn) {
+      detail.classList.remove("hidden");
+      btn.classList.add("ouvert");
+      setTimeout(() => detail.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+    }
   }
   if (nom === "graphiques") cablerChipsGraphique();
   if (nom === "reglages") cablerReglages();
@@ -460,7 +487,7 @@ function carteJour(modeles, i, compact, plage) {
   const iM = indexMaintenant(modeles.horaire.temps);
 
   if (compact) {
-    return `<div class="ma-carte-jour">
+    return `<div class="ma-carte-jour" data-jour-apercu="${i}">
       <b>${nomJourCourt(j.temps[i], i)}</b>
       ${icone(info.icone, 30)}
       <div class="mm"><span class="max">${arrondi(mx)}°</span> <span class="min">${arrondi(mn)}°</span></div>
