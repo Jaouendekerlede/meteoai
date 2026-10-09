@@ -2,8 +2,8 @@
 
 export const PROPRIETAIRE = "Jean-Luc RIO";
 export const ANNEE = 2026;
-export const VERSION = 10;
-export const VERSION_TEXTE = "Version 10 : nouvelle présentation façon Google Weather (fond plein écran, grand chiffre, barre min/max sur 10 jours) + bandeau de mise à jour au démarrage";
+export const VERSION = 11;
+export const VERSION_TEXTE = "Version 11 : touchez un jour dans la liste \"10 jours\" pour voir ses prévisions heure par heure";
 
 export const MENTION_COURTE = `© ${ANNEE} ${PROPRIETAIRE} — Tous droits réservés`;
 

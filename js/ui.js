@@ -393,21 +393,30 @@ function rendreAccueil(etat) {
   return html;
 }
 
-function rendreHoraires(modeles, iM) {
+// Plage d'heures générique (24 par défaut, à partir de l'index global
+// `debut`) -- `indexActuel` (index global de "maintenant") ne marque une
+// heure comme en cours que si elle tombe dans la plage affichée, ce qui
+// laisse les jours futurs sans marqueur "Maint." (logique).
+function rendreHorairesPlage(modeles, debut, indexActuel, nombre = 24) {
   return modeles.horaire.temps
-    .slice(iM, iM + 24)
+    .slice(debut, debut + nombre)
     .map((t, k) => {
-      const i = iM + k;
+      const i = debut + k;
+      const estMaintenant = i === indexActuel;
       const infoH = infoCode(valeurAffichage(modeles.horaire.parChamp, "weathercode", i) ?? 0, valeurAffichage(modeles.horaire.parChamp, "is_day", i) ?? 1);
       const precip = valeurAffichage(modeles.horaire.parChamp, "precipitation_probability", i);
-      return `<div class="ma-heure ${k === 0 ? "maintenant" : ""}">
-        <div class="h">${k === 0 ? '<span class="ma-point-direct"></span>Maint.' : heureCourte(t)}</div>
+      return `<div class="ma-heure ${estMaintenant ? "maintenant" : ""}">
+        <div class="h">${estMaintenant ? '<span class="ma-point-direct"></span>Maint.' : heureCourte(t)}</div>
         ${icone(infoH.icone, 26)}
         <div class="t">${arrondi(valeurAffichage(modeles.horaire.parChamp, "temperature_2m", i))}°</div>
         ${Number.isFinite(precip) ? `<div class="p">💧${arrondi(precip)}%</div>` : ""}
       </div>`;
     })
     .join("");
+}
+
+function rendreHoraires(modeles, iM) {
+  return rendreHorairesPlage(modeles, iM, iM);
 }
 
 function carteSoleil(j) {
@@ -448,6 +457,7 @@ function carteJour(modeles, i, compact, plage) {
   const vent = valeurAffichage(j.parChamp, "wind_speed_10m_max", i);
   const conf = confianceJour(modeles, i);
   const couleurConf = { haute: "var(--vert)", moyenne: "var(--orange)", basse: "var(--rouge)" }[conf.niveau];
+  const iM = indexMaintenant(modeles.horaire.temps);
 
   if (compact) {
     return `<div class="ma-carte-jour">
@@ -481,6 +491,8 @@ function carteJour(modeles, i, compact, plage) {
       <div class="ma-conf-mini" style="color:${couleurConf}">${conf.score}</div>
     </button>
     <div class="ma-conf-detail hidden" id="ma-conf-detail-jour${i}">
+      <div class="ma-jour-detail-titre">Heure par heure</div>
+      <div class="ma-horaires">${rendreHorairesPlage(modeles, i * 24, iM)}</div>
       <div class="ma-details-confiance">${conf.details.map((d) => `<div class="ma-detail ${d.points > 0 ? "bon" : d.points < 0 ? "mauvais" : "neutre"}">${d.points > 0 ? "✅" : d.points < 0 ? "⚠️" : "•"} <span>${d.label}</span></div>`).join("")}</div>
     </div>
   </div>`;

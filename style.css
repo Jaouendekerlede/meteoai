@@ -182,6 +182,7 @@ body.clair { background: linear-gradient(180deg, var(--fond-haut-dyn) 0%, var(--
 .ma-conf-ligne.ouvert .ma-chevron-down { transform: rotate(180deg); }
 .ma-conf-detail { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--bordure); }
 .ma-conf-detail.hidden { display: none; }
+.ma-jour-detail-titre { font-size: 12px; font-weight: 700; color: var(--texte-att); margin-bottom: 4px; }
 .ma-conf-modeles { margin-top: 12px; }
 .ma-sous-scores { display: flex; gap: 8px; margin-bottom: 10px; }
 .ma-sous-score { flex: 1; background: rgba(255, 255, 255, 0.04); border-radius: 12px; padding: 8px 4px; text-align: center; }
