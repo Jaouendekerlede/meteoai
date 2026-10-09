@@ -302,6 +302,33 @@ function rendreAlertes(alertes) {
   return `<section class="ma-alertes">${alertes.map((a) => `<div class="ma-alerte ma-alerte-${a.niveau}"><span class="ic">${a.icone}</span><span>${a.texte}</span></div>`).join("")}</section>`;
 }
 
+// Ligne de résumé des précipitations sous le bloc principal, façon Google
+// Weather ("No precipitation expected for the next hour" / "Rain starting
+// around 14:00") -- regarde les 3 prochaines heures.
+function rendrePrecipResume(modeles, iM) {
+  const fenetre = modeles.horaire.temps.slice(iM, iM + 3).map((_, k) => valeurAffichage(modeles.horaire.parChamp, "precipitation_probability", iM + k));
+  const seuil = fenetre.findIndex((p) => Number.isFinite(p) && p >= 50);
+  if (seuil === -1) return `<div class="ma-precip-ligne"><span class="ic">💧</span>Aucune précipitation prévue dans les prochaines heures.</div>`;
+  if (seuil === 0) return `<div class="ma-precip-ligne"><span class="ic">💧</span>Précipitations probables actuellement.</div>`;
+  return `<div class="ma-precip-ligne"><span class="ic">💧</span>Précipitations probables vers ${heureCourte(modeles.horaire.temps[iM + seuil])}.</div>`;
+}
+
+// Min/max de toute la période affichée (pas seulement du jour) -- sert à
+// positionner la barre de plage de chaque jour dans la liste "10 jours",
+// comme Google Weather (chaque jour se lit par rapport à la semaine).
+function plageTemperaturesPeriode(modeles) {
+  const j = modeles.journalier;
+  let min = Infinity;
+  let max = -Infinity;
+  j.temps.forEach((_, i) => {
+    const mn = valeurAffichage(j.parChamp, "temperature_2m_min", i);
+    const mx = valeurAffichage(j.parChamp, "temperature_2m_max", i);
+    if (Number.isFinite(mn)) min = Math.min(min, mn);
+    if (Number.isFinite(mx)) max = Math.max(max, mx);
+  });
+  return { min, max };
+}
+
 // ── Onglet Accueil ───────────────────────────────────────────────────────
 
 function rendreAccueil(etat) {
@@ -330,20 +357,14 @@ function rendreAccueil(etat) {
         <span class="max">▲ ${arrondi(valeurAffichage(j.parChamp, "temperature_2m_max", 0))}°</span>
         <span class="min">▼ ${arrondi(valeurAffichage(j.parChamp, "temperature_2m_min", 0))}°</span>
       </div>
-      <div class="ma-stats">
-        ${statHtml("droplet", "Pluie", `${arrondi(valeurInterpolee(modeles.horaire, "precipitation_probability"))}%`)}
-        ${statHtml("wind", "Vent", `${arrondi(actuel.wind_speed_10m)} km/h`, `Rafales ${arrondi(actuel.wind_gusts_10m)}`)}
-        ${statHtml("droplet", "Humidité", `${arrondi(actuel.relative_humidity_2m)}%`)}
-        ${statHtml("gauge", "Pression", `${arrondi(actuel.surface_pressure)}`, "hPa")}
-        ${statHtml("sun", "Indice UV", uvTexte(valeurInterpolee(modeles.horaire, "uv_index")))}
-      </div>
     </section>
+    ${rendrePrecipResume(modeles, iM)}
 
     ${carteConfiance(conf, modeles, iM, "accueil")}
 
     <section class="ma-section">
       <div class="ma-section-titre">Prochaines heures</div>
-      <div class="ma-horaires">${rendreHoraires(modeles, iM)}</div>
+      <div class="ma-carte ma-carte-horaires"><div class="ma-horaires">${rendreHoraires(modeles, iM)}</div></div>
     </section>
 
     <section class="ma-section">
@@ -355,6 +376,17 @@ function rendreAccueil(etat) {
     </section>
 
     ${carteSoleil(j)}
+
+    <section class="ma-section">
+      <div class="ma-section-titre">Détails</div>
+      <div class="ma-stats">
+        ${statHtml("droplet", "Précipitations", `${arrondi(valeurInterpolee(modeles.horaire, "precipitation_probability"))}%`)}
+        ${statHtml("wind", "Vent", `${arrondi(actuel.wind_speed_10m)} km/h`, `Rafales ${arrondi(actuel.wind_gusts_10m)} km/h`)}
+        ${statHtml("droplet", "Humidité", `${arrondi(actuel.relative_humidity_2m)}%`)}
+        ${statHtml("gauge", "Pression", `${arrondi(actuel.surface_pressure)} hPa`)}
+        ${statHtml("sun", "Indice UV", uvTexte(valeurInterpolee(modeles.horaire, "uv_index")))}
+      </div>
+    </section>
 
     <div class="ma-hint">Comparaison de ${MODELES.length} modèles météo · Open-Meteo</div>
   `;
@@ -405,7 +437,7 @@ function carteSoleil(j) {
 
 // ── Carte "jour" (réutilisée en aperçu compact et en liste complète) ─────
 
-function carteJour(modeles, i, compact) {
+function carteJour(modeles, i, compact, plage) {
   const j = modeles.journalier;
   const code = valeurAffichage(j.parChamp, "weathercode", i) ?? 0;
   const info = infoCode(code, 1);
@@ -427,12 +459,23 @@ function carteJour(modeles, i, compact) {
     </div>`;
   }
 
+  // Barre de plage min/max positionnée dans l'étendue de toute la période
+  // affichée (ex: 0°..22° sur 10 jours) -- comme Google Weather, chaque
+  // jour se lit par rapport au reste de la semaine, pas isolément.
+  let barre = "";
+  if (plage && Number.isFinite(mn) && Number.isFinite(mx) && plage.max > plage.min) {
+    const etendue = plage.max - plage.min;
+    const gauche = ((mn - plage.min) / etendue) * 100;
+    const largeur = Math.max(6, ((mx - mn) / etendue) * 100);
+    barre = `<div class="ma-temp-range"><i style="left:${gauche.toFixed(1)}%;width:${largeur.toFixed(1)}%"></i></div>`;
+  }
+
   return `<div class="ma-carte">
     <button type="button" class="ma-jour-ligne" data-conf-toggle="jour${i}">
       <div class="ma-jour-nom">${nomJour(j.temps[i], i)}<small>${dateCourte(j.temps[i])}</small></div>
       ${icone(info.icone, 30)}
       <div class="ma-jour-chiffres">
-        <div class="ma-jour-minmax"><span class="max">${arrondi(mx)}°</span> <span class="min">${arrondi(mn)}°</span></div>
+        <div class="ma-jour-minmax"><span class="min">${arrondi(mn)}°</span>${barre || "<span style=\"flex:1\"></span>"}<span class="max">${arrondi(mx)}°</span></div>
         <div class="ma-jour-sous">💧 ${Number.isFinite(precipPct) ? arrondi(precipPct) + "%" : "—"} · ${Number.isFinite(precipMm) ? precipMm.toFixed(1) : "0"} mm · 💨 ${arrondi(vent)} km/h</div>
       </div>
       <div class="ma-conf-mini" style="color:${couleurConf}">${conf.score}</div>
@@ -445,7 +488,8 @@ function carteJour(modeles, i, compact) {
 
 function rendreJoursComplet(etat) {
   const { modeles } = etat;
-  return `<section class="ma-section">${modeles.journalier.temps.map((_, i) => carteJour(modeles, i, false)).join("")}</section>`;
+  const plage = plageTemperaturesPeriode(modeles);
+  return `<section class="ma-section">${modeles.journalier.temps.map((_, i) => carteJour(modeles, i, false, plage)).join("")}</section>`;
 }
 
 // ── Onglet Graphiques ────────────────────────────────────────────────────

@@ -13,6 +13,10 @@
 </head>
 <body>
   <div id="ma-splash"><img src="icons/icon-192.png" alt=""><span>Météo AI</span></div>
+  <div id="ma-maj-banniere" class="ma-maj-banniere hidden">
+    <span>🔄 Nouvelle version disponible</span>
+    <button type="button" id="ma-maj-btn">Mettre à jour</button>
+  </div>
   <div class="ma-app">
     <header class="ma-entete">
       <div class="ma-lieu" id="ma-lieu-btn">
@@ -54,7 +58,32 @@
 
   <script type="module" src="js/main.js"></script>
   <script>
-    if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js"));
+    // Detecte une mise a jour deja installee en arriere-plan (nouveau
+    // service-worker.js pousse sur GitHub) et le signale par un bandeau
+    // "Mettre a jour" au demarrage, plutot que de laisser l'appli tourner
+    // silencieusement sur une ancienne version jusqu'a une fermeture
+    // complete -- demande explicite de Jean-Luc le 2026-10-09 ("je ne vois
+    // pas de changement" apres une mise a jour deployee).
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", async () => {
+        const reg = await navigator.serviceWorker.register("service-worker.js");
+        const banniere = document.getElementById("ma-maj-banniere");
+        const signalerMaj = () => banniere?.classList.remove("hidden");
+
+        if (reg.waiting && navigator.serviceWorker.controller) signalerMaj();
+        reg.addEventListener("updatefound", () => {
+          const nouveau = reg.installing;
+          nouveau?.addEventListener("statechange", () => {
+            if (nouveau.state === "installed" && navigator.serviceWorker.controller) signalerMaj();
+          });
+        });
+        setInterval(() => reg.update(), 60 * 60 * 1000);
+
+        document.getElementById("ma-maj-btn")?.addEventListener("click", () => {
+          window.location.reload();
+        });
+      });
+    }
   </script>
 </body>
 </html>
